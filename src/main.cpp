@@ -1,7 +1,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-using namespace std;
+
 #include <iostream>
+
+using namespace std;
 
 GLfloat point[] = {
      0.0f,  0.5f, 0.0f,
@@ -49,6 +51,7 @@ void glfwKeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(pWindow, GL_TRUE);
+        
     }
 }
 
@@ -88,7 +91,7 @@ int main(void)
     cout << "Renderer: " << glGetString(GL_RENDERER) << endl;
     cout << "OpenGL version: " << glGetString(GL_VERSION) << endl;
 
-    glClearColor(0.6, 0.2, 0.8, 0.5);
+    glClearColor(0.72,0.209,0.204,0);
 
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs, 1, &vertex_shader, nullptr);
@@ -128,23 +131,24 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    /* Loop until the user closes the window */
+
     while (!glfwWindowShouldClose(pWindow))
     {
-        /* Render here */
+
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shader_program);
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        /* Swap front and back buffers */
+
         glfwSwapBuffers(pWindow);
 
-        /* Poll for and process events */
+
         glfwPollEvents();
     }
 
     glfwTerminate();
+    cerr<<"FATAL ERROR:Why did you close me? I'll make you open me, and when you open it I won't tell you that you opened me!!! I always come back!!! OPEN ME FAST!!!!!!!!!!!!"<< endl;
     return 0;
 }
