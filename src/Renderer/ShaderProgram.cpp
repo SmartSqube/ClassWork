@@ -1,21 +1,22 @@
 #include "ShaderProgram.h"
 
 #include <iostream>
+using namespace std;
 
 namespace Renderer {
-    ShaderProgram::ShaderProgram(const std::string& vertexShader, const std::string& fragmentShader)
+    ShaderProgram::ShaderProgram(const string& vertexShader, const string& fragmentShader)
     {
         GLuint vertexShaderID;
         if (!createShader(vertexShader, GL_VERTEX_SHADER, vertexShaderID))
         {
-            std::cerr << "VERTEX SHADER compile-time error" << std::endl;
+            cerr << "VERTEX SHADER compile-time error" << endl;
             return;
         }
 
         GLuint fragmentShaderID;
         if (!createShader(fragmentShader, GL_FRAGMENT_SHADER, fragmentShaderID))
         {
-            std::cerr << "FRAGMENT SHADER compile-time error" << std::endl;
+            cerr << "FRAGMENT SHADER compile-time error" << endl;
             glDeleteShader(vertexShaderID);
             return;
         }
@@ -31,7 +32,7 @@ namespace Renderer {
         {
             GLchar infoLog[1024];
             glGetShaderInfoLog(m_ID, 1024, nullptr, infoLog);
-            std::cerr << "ERROR::SHADER: Link-time error:\n" << infoLog << std::endl;
+            cerr << "ERROR::SHADER: Link-time error:\n" << infoLog << endl;
         }
         else
         {
@@ -43,7 +44,7 @@ namespace Renderer {
     }
 
 
-    bool ShaderProgram::createShader(const std::string& source, const GLenum shaderType, GLuint& shaderID)
+    bool ShaderProgram::createShader(const string& source, const GLenum shaderType, GLuint& shaderID)
     {
         shaderID = glCreateShader(shaderType);
         const char* code = source.c_str();
@@ -56,7 +57,7 @@ namespace Renderer {
         {
             GLchar infoLog[1024];
             glGetShaderInfoLog(shaderID, 1024, nullptr, infoLog);
-            std::cerr << "ERROR::SHADER: Compile-time error:\n" << infoLog << std::endl;
+            cerr << "ERROR::SHADER: Compile-time error:\n" << infoLog << endl;
             return false;
         }
         return true;
@@ -90,5 +91,10 @@ namespace Renderer {
 
         shaderProgram.m_ID = 0;
         shaderProgram.m_isCompiled = false;
+    }
+
+    void ShaderProgram::setInt(const string& name, const GLint value)
+    {
+        glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value);
     }
 }

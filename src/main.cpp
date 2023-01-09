@@ -5,19 +5,28 @@
 
 #include "Renderer/ShaderProgram.h"
 #include "Resources/ResourceManager.h"
-
+#include "Renderer/Texture2D.h"
 using namespace std;
 
 GLfloat point[] = {
-     0.0f,  0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
+    0.5f,  0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f,
+    -0.5f, -0.5f, 0.0f,
     -0.5f, -0.5f, 0.0f
 };
 
 GLfloat colors[] = {
     1.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f
+    0.0f, 0.0f, 1.0f,
+    1.0f, 1.0f, 0.0f
+};
+
+GLfloat texCoord[] = {
+    1.0f, 1.0f,
+    1.0f, 0.0f,
+    0.0f, 0.0f,
+    0.0f, 1.0f
 };
 
 int g_windowSizeX = 640;
@@ -40,6 +49,7 @@ void glfwKeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int
 
 int main(int argc, char** argv)
 {
+    /* Initialize the library */
     if (!glfwInit())
     {
         cout << "glfwInit failed!" << endl;
@@ -50,7 +60,8 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* pWindow = glfwCreateWindow(g_windowSizeX, g_windowSizeY, "Battle City", nullptr, nullptr);
+    /* Create a windowed mode window and its OpenGL context */
+    GLFWwindow* pWindow = glfwCreateWindow(g_windowSizeX, g_windowSizeY, "PoRtHoLe", nullptr, nullptr);
     if (!pWindow)
     {
         cout << "glfwCreateWindow failed!" << endl;
@@ -61,6 +72,7 @@ int main(int argc, char** argv)
     glfwSetWindowSizeCallback(pWindow, glfwWindowSizeCallback);
     glfwSetKeyCallback(pWindow, glfwKeyCallback);
 
+    /* Make the window's context current */
     glfwMakeContextCurrent(pWindow);
 
     if (!gladLoadGL())
@@ -71,16 +83,18 @@ int main(int argc, char** argv)
     cout << "Renderer: " << glGetString(GL_RENDERER) << endl;
     cout << "OpenGL version: " << glGetString(GL_VERSION) << endl;
 
-    glClearColor(0.8, 0.5, 0.6, 0.8);
+    glClearColor(1, 1, 0, 1);
 
     {
         ResourceManager resourceManager(argv[0]);
         auto pDefaultShaderProgram = resourceManager.loadShaders("DefaultShader", "res/shaders/vertex.txt", "res/shaders/fragment.txt");
         if (!pDefaultShaderProgram)
         {
-            cerr << "Can't create shader program: " << "DefaultShader" << endl;
+           cerr << "Can't create shader program: " << "DefaultShader" << endl;
             return -1;
         }
+
+        auto tex = resourceManager.loadTexture("DefaultTexture", "res/textures/ldas.jpg");
 
         GLuint points_vbo = 0;
         glGenBuffers(1, &points_vbo);
@@ -91,6 +105,11 @@ int main(int argc, char** argv)
         glGenBuffers(1, &colors_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+
+        GLuint texCoord_vbo = 0;
+        glGenBuffers(1, &texCoord_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, texCoord_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(texCoord), texCoord, GL_STATIC_DRAW);
 
         GLuint vao = 0;
         glGenVertexArrays(1, &vao);
@@ -104,24 +123,35 @@ int main(int argc, char** argv)
         glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, texCoord_vbo);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+
+
+        pDefaultShaderProgram->use();
+        pDefaultShaderProgram->setInt("tex", 0);
+
+
+        /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(pWindow))
         {
+            /* Render here */
             glClear(GL_COLOR_BUFFER_BIT);
 
-            pDefaultShaderProgram -> use();
+            pDefaultShaderProgram->use();
             glBindVertexArray(vao);
+            tex->bind();
             glDrawArrays(GL_TRIANGLES, 0, 3);
 
+            /* Swap front and back buffers */
             glfwSwapBuffers(pWindow);
 
+            /* Poll for and process events */
             glfwPollEvents();
         }
     }
 
     glfwTerminate();
-    cerr<<"FATAL ERROR:Why did you close me? I'll make you open me, and when you open it I won't tell you that you opened me!!! I always come back!!! OPEN ME FAST!!!!!!!!!!!!"<< endl;
     return 0;
 }
-    
-
-
