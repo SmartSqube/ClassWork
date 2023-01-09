@@ -1,23 +1,21 @@
 #include "ShaderProgram.h"
 
-
 #include <iostream>
-using namespace std;
 
-namespace RenderEngine {
-    ShaderProgram::ShaderProgram(const string& vertexShader, const string& fragmentShader)
+namespace Renderer {
+    ShaderProgram::ShaderProgram(const std::string& vertexShader, const std::string& fragmentShader)
     {
         GLuint vertexShaderID;
         if (!createShader(vertexShader, GL_VERTEX_SHADER, vertexShaderID))
         {
-            cerr << "VERTEX SHADER compile-time error" << endl;
+            std::cerr << "VERTEX SHADER compile-time error" << std::endl;
             return;
         }
 
         GLuint fragmentShaderID;
         if (!createShader(fragmentShader, GL_FRAGMENT_SHADER, fragmentShaderID))
         {
-            cerr << "FRAGMENT SHADER compile-time error" << endl;
+            std::cerr << "FRAGMENT SHADER compile-time error" << std::endl;
             glDeleteShader(vertexShaderID);
             return;
         }
@@ -33,7 +31,7 @@ namespace RenderEngine {
         {
             GLchar infoLog[1024];
             glGetShaderInfoLog(m_ID, 1024, nullptr, infoLog);
-            cerr << "ERROR::SHADER: Link-time error:\n" << infoLog << endl;
+            std::cerr << "ERROR::SHADER: Link-time error:\n" << infoLog << std::endl;
         }
         else
         {
@@ -45,7 +43,7 @@ namespace RenderEngine {
     }
 
 
-    bool ShaderProgram::createShader(const string& source, const GLenum shaderType, GLuint& shaderID)
+    bool ShaderProgram::createShader(const std::string& source, const GLenum shaderType, GLuint& shaderID)
     {
         shaderID = glCreateShader(shaderType);
         const char* code = source.c_str();
@@ -57,8 +55,8 @@ namespace RenderEngine {
         if (!success)
         {
             GLchar infoLog[1024];
-            glGetProgramInfoLog(shaderID, 1024, nullptr, infoLog);
-            cerr << "ERROR::SHADER: Compile-time error:\n" << infoLog << endl;
+            glGetShaderInfoLog(shaderID, 1024, nullptr, infoLog);
+            std::cerr << "ERROR::SHADER: Compile-time error:\n" << infoLog << std::endl;
             return false;
         }
         return true;
@@ -93,5 +91,4 @@ namespace RenderEngine {
         shaderProgram.m_ID = 0;
         shaderProgram.m_isCompiled = false;
     }
-
 }

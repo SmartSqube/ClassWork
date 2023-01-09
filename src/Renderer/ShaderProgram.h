@@ -1,18 +1,16 @@
+
 #pragma once
 
 #include <glad/glad.h>
 #include <string>
 
-
-namespace RenderEngine {
+namespace Renderer {
     class ShaderProgram {
     public:
         ShaderProgram(const std::string& vertexShader, const std::string& fragmentShader);
         ~ShaderProgram();
         bool isCompiled() const { return m_isCompiled; }
         void use() const;
-        void setInt(const std::string& name, const GLint value);
-        void setFloat(const std::string& name, const GLfloat value);
 
         ShaderProgram() = delete;
         ShaderProgram(const ShaderProgram&) = delete;
