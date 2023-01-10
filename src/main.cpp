@@ -1,42 +1,49 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/vec2.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
 
 #include "Renderer/ShaderProgram.h"
 #include "Resources/ResourceManager.h"
 #include "Renderer/Texture2D.h"
+
 using namespace std;
+using namespace glm;
 
 GLfloat point[] = {
-    0.5f,  0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f
+    -50.f, -50.f, 0.0f,  // top right
+    -50.f, 50.f, 0.0f,  // bottom right
+    50.f, 50.f, 0.0f,  // bottom left
+    -50.f, -50.f, 0.0f,  // top right
+    50.f, -50.f, 0.0f,  // bottom right
+    50.f, 50.f, 0.0f,  // bottom left
 };
 
 GLfloat colors[] = {
     1.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f
+    0.0f, 0.0f, 1.0f
 };
 
 GLfloat texCoord[] = {
-    1.0f, 1.0f,
-    1.0f, 0.0f,
     0.0f, 0.0f,
-    0.0f, 1.0f
+    0.0f, 1.0f,
+    1.0f, 1.0f,
+    0.0f, 0.0f,
+    1.0f, 0.0f,
+    1.0f, 1.0f
 };
 
-int g_windowSizeX = 640;
-int g_windowSizeY = 480;
+ivec2 g_windowSize(640, 480);
 
 void glfwWindowSizeCallback(GLFWwindow* pWindow, int width, int height)
 {
-    g_windowSizeX = width;
-    g_windowSizeY = height;
-    glViewport(0, 0, g_windowSizeX, g_windowSizeY);
+    g_windowSize.x = width;
+    g_windowSize.y = height;
+    glViewport(0, 0, width, height);
 }
 
 void glfwKeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int mode)
@@ -49,10 +56,10 @@ void glfwKeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int
 
 int main(int argc, char** argv)
 {
-    /* Initialize the library */
+
     if (!glfwInit())
     {
-        cout << "glfwInit failed!" << endl;
+    cout << "glfwInit failed!" << endl;
         return -1;
     }
 
@@ -60,8 +67,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    /* Create a windowed mode window and its OpenGL context */
-    GLFWwindow* pWindow = glfwCreateWindow(g_windowSizeX, g_windowSizeY, "PoRtHoLe", nullptr, nullptr);
+    GLFWwindow* pWindow = glfwCreateWindow(g_windowSize.x, g_windowSize.y, "PoRtHoLe", nullptr, nullptr);
     if (!pWindow)
     {
         cout << "glfwCreateWindow failed!" << endl;
@@ -72,7 +78,6 @@ int main(int argc, char** argv)
     glfwSetWindowSizeCallback(pWindow, glfwWindowSizeCallback);
     glfwSetKeyCallback(pWindow, glfwKeyCallback);
 
-    /* Make the window's context current */
     glfwMakeContextCurrent(pWindow);
 
     if (!gladLoadGL())
@@ -83,18 +88,18 @@ int main(int argc, char** argv)
     cout << "Renderer: " << glGetString(GL_RENDERER) << endl;
     cout << "OpenGL version: " << glGetString(GL_VERSION) << endl;
 
-    glClearColor(1, 1, 0, 1);
+    glClearColor(0.5, 0.1, 0.2, 0.5);
 
     {
         ResourceManager resourceManager(argv[0]);
         auto pDefaultShaderProgram = resourceManager.loadShaders("DefaultShader", "res/shaders/vertex.txt", "res/shaders/fragment.txt");
         if (!pDefaultShaderProgram)
         {
-           cerr << "Can't create shader program: " << "DefaultShader" << endl;
+            cerr << "Can't create shader program: " << "DefaultShader" << endl;
             return -1;
         }
 
-        auto tex = resourceManager.loadTexture("DefaultTexture", "res/textures/ldas.jpg");
+        auto tex = resourceManager.loadTexture("DefaultTexture", "res/textures/ss.gif");
 
         GLuint points_vbo = 0;
         glGenBuffers(1, &points_vbo);
@@ -127,27 +132,48 @@ int main(int argc, char** argv)
         glBindBuffer(GL_ARRAY_BUFFER, texCoord_vbo);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-
-
         pDefaultShaderProgram->use();
         pDefaultShaderProgram->setInt("tex", 0);
 
+        mat4 modelMatrix_1 = mat4(1.f);
+        modelMatrix_1 = translate(modelMatrix_1, vec3(100.f, 50.f, 0.f));
 
-        /* Loop until the user closes the window */
+        mat4 modelMatrix_2 = mat4(1.f);
+        modelMatrix_2 = translate(modelMatrix_2, vec3(200.f, 50.f, 0.f));
+
+        mat4 modelMatrix_3 = mat4(1.f);
+        modelMatrix_3 = translate(modelMatrix_3, vec3(100.f, 50.f, 0.f));
+
+        mat4 modelMatrix_4 = mat4(1.f);
+        modelMatrix_4 = translate(modelMatrix_4, vec3(200.f, 50.f, 0.f));
+
+        mat4 projectionMatrix = ortho(0.f, static_cast<float>(g_windowSize.x), 0.f, static_cast<float>(g_windowSize.y), -100.f, 100.f);
+
+        pDefaultShaderProgram->setMatrix4("projectionMat", projectionMatrix);
+
         while (!glfwWindowShouldClose(pWindow))
         {
-            /* Render here */
             glClear(GL_COLOR_BUFFER_BIT);
 
             pDefaultShaderProgram->use();
             glBindVertexArray(vao);
             tex->bind();
-            glDrawArrays(GL_TRIANGLES, 0, 3);
 
-            /* Swap front and back buffers */
+            pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_1);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_2);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            
+            pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_3);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_4);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
             glfwSwapBuffers(pWindow);
 
-            /* Poll for and process events */
             glfwPollEvents();
         }
     }
@@ -155,3 +181,4 @@ int main(int argc, char** argv)
     glfwTerminate();
     return 0;
 }
+
