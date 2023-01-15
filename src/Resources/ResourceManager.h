@@ -3,11 +3,14 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <vector>
 using namespace std;
 namespace Renderer
 {
     class ShaderProgram;
     class Texture2D;
+    class Sprite;
+    class AnimatedSprite;
 }
 
 
@@ -26,6 +29,28 @@ public:
     shared_ptr<Renderer::Texture2D> loadTexture(const string& textureName, const string& texturePath);
     shared_ptr<Renderer::Texture2D> getTexture(const string& textureName);
 
+    shared_ptr<Renderer::Sprite> loadSprite(const string& spriteName,
+                                                 const string& textureName,
+                                                 const string& shaderName,
+                                                 const unsigned int spriteWidth,
+                                                 const unsigned int spriteHeight,
+                                                 const string& subTextureName = "default");
+    shared_ptr<Renderer::Sprite> getSprite(const string& spriteName);
+
+    shared_ptr<Renderer::AnimatedSprite> loadAnimatedSprite(const string& spriteName,
+                                                                 const string& textureName,
+                                                                 const string& shaderName,
+                                                                 const unsigned int spriteWidth,
+                                                                 const unsigned int spriteHeight,
+                                                                 const string& subTextureName = "default");
+    shared_ptr<Renderer::AnimatedSprite> getAnimatedSprite(const string& spriteName);
+
+    shared_ptr<Renderer::Texture2D> loatTextureAtlas(string textureName,
+                                                          string texturePath,
+                                                          vector<string> subTextures,
+                                                          const unsigned int subTextureWidth,
+                                                          const unsigned int subTextureHeight);
+
 private:
     string getFileString(const string& relativeFilePath) const;
 
@@ -34,6 +59,12 @@ private:
 
     typedef map<const string, shared_ptr<Renderer::Texture2D>> TexturesMap;
     TexturesMap m_textures;
+
+    typedef map<const string, shared_ptr<Renderer::Sprite>> SpritesMap;
+    SpritesMap m_sprites;
+
+    typedef map<const string, shared_ptr<Renderer::AnimatedSprite>> AnimatedSpritesMap;
+    AnimatedSpritesMap m_animatedSprites;
 
     string m_path;
 };

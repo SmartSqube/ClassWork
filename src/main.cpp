@@ -5,27 +5,33 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
+#include <chrono>
 
 #include "Renderer/ShaderProgram.h"
 #include "Resources/ResourceManager.h"
 #include "Renderer/Texture2D.h"
+#include "Renderer/Sprite.h"
+#include "Renderer/AnimatedSprite.h"
 
 using namespace std;
-using namespace glm;
+
 
 GLfloat point[] = {
-    -50.f, -50.f, 0.0f,  // top right
-    -50.f, 50.f, 0.0f,  // bottom right
-    50.f, 50.f, 0.0f,  // bottom left
-    -50.f, -50.f, 0.0f,  // top right
-    50.f, -50.f, 0.0f,  // bottom right
-    50.f, 50.f, 0.0f,  // bottom left
+    -100.f, -100.f, 0.0f, // top right
+    -100.f, 100.f, 0.0f,  // bottom right
+    100.f, 100.f, 0.0f,   // top left
+    -100.f, -100.f, 0.0f, // bottom right
+    100.f, -100.f, 0.0f,  // bottom left
+    100.f, 100.f, 0.0f,   // top left
+
+    
+
 };
 
 GLfloat colors[] = {
-    1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f
+    0.3f, 0.9f, 0.1f,
+    0.3f, 0.8f, 0.3f,
+    0.3f, 0.9f, 0.5f,
 };
 
 GLfloat texCoord[] = {
@@ -37,7 +43,9 @@ GLfloat texCoord[] = {
     1.0f, 1.0f
 };
 
-ivec2 g_windowSize(640, 480);
+glm::ivec2 g_windowSize(640, 480);
+
+bool isEagle = false;
 
 void glfwWindowSizeCallback(GLFWwindow* pWindow, int width, int height)
 {
@@ -52,14 +60,17 @@ void glfwKeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int
     {
         glfwSetWindowShouldClose(pWindow, GL_TRUE);
     }
+    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+    {
+        isEagle = !isEagle;
+    }
 }
 
 int main(int argc, char** argv)
 {
-
     if (!glfwInit())
     {
-    cout << "glfwInit failed!" << endl;
+        cout << "glfwInit failed!" << endl;
         return -1;
     }
 
@@ -78,6 +89,7 @@ int main(int argc, char** argv)
     glfwSetWindowSizeCallback(pWindow, glfwWindowSizeCallback);
     glfwSetKeyCallback(pWindow, glfwKeyCallback);
 
+   
     glfwMakeContextCurrent(pWindow);
 
     if (!gladLoadGL())
@@ -88,7 +100,7 @@ int main(int argc, char** argv)
     cout << "Renderer: " << glGetString(GL_RENDERER) << endl;
     cout << "OpenGL version: " << glGetString(GL_VERSION) << endl;
 
-    glClearColor(0.5, 0.1, 0.2, 0.5);
+    glClearColor(0.5, 0.9, 0.2, 0.5);
 
     {
         ResourceManager resourceManager(argv[0]);
@@ -99,7 +111,38 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        auto tex = resourceManager.loadTexture("DefaultTexture", "res/textures/ss.gif");
+        auto pSpriteShaderProgram = resourceManager.loadShaders("SpriteShader", "res/shaders/vSprite.txt", "res/shaders/fSprite.txt");
+        if (!pSpriteShaderProgram)
+        {
+            cerr << "Can't create shader program: " << "SpriteShader" << endl;
+            return -1;
+        }
+
+        auto tex = resourceManager.loadTexture("DefaultTexture", "res/textures/S9OtX.png");
+
+        vector<string> subTexturesNames = {
+            "Lava1",
+            "Lava2",
+            "Lava3",
+            
+        };
+
+        auto pTextureAtlas = resourceManager.loatTextureAtlas("DefaultTextureAtlas", "res/textures/S9OtX.png", move(subTexturesNames), 20, 20);
+
+        auto pSprite = resourceManager.loadSprite("NewSprite", "DefaultTextureAtlas", "SpriteShader", 100, 100, "stand");
+        pSprite->setPosition(glm::vec2(500, 500));
+
+        auto pAnimatedSprite = resourceManager.loadAnimatedSprite("NewAnimatedSprite", "DefaultTextureAtlas", "SpriteShader", 100, 100, "stand");
+        pAnimatedSprite->setPosition(glm::vec2(300, 100));
+        vector<pair<string, uint64_t>> LavaState;
+        LavaState.emplace_back(make_pair<string, uint64_t>("Lava1", 100000000));
+        LavaState.emplace_back(make_pair<string, uint64_t>("Lava2", 100000000));
+        LavaState.emplace_back(make_pair<string, uint64_t>("Lava3", 100000000));
+
+
+        pAnimatedSprite->insertState("LavaState", move(LavaState));
+
+        pAnimatedSprite->setState("LavaState");
 
         GLuint points_vbo = 0;
         glGenBuffers(1, &points_vbo);
@@ -135,24 +178,30 @@ int main(int argc, char** argv)
         pDefaultShaderProgram->use();
         pDefaultShaderProgram->setInt("tex", 0);
 
-        mat4 modelMatrix_1 = mat4(1.f);
-        modelMatrix_1 = translate(modelMatrix_1, vec3(100.f, 50.f, 0.f));
+        glm::mat4 modelMatrix_1 = glm::mat4(1.f);
+        modelMatrix_1 = glm::translate(modelMatrix_1, glm::vec3(100.f, 50.f, 0.f));
 
-        mat4 modelMatrix_2 = mat4(1.f);
-        modelMatrix_2 = translate(modelMatrix_2, vec3(200.f, 50.f, 0.f));
+        glm::mat4 modelMatrix_2 = glm::mat4(1.f);
+        modelMatrix_2 = glm::translate(modelMatrix_2, glm::vec3(590.f, 50.f, 0.f));
 
-        mat4 modelMatrix_3 = mat4(1.f);
-        modelMatrix_3 = translate(modelMatrix_3, vec3(100.f, 50.f, 0.f));
-
-        mat4 modelMatrix_4 = mat4(1.f);
-        modelMatrix_4 = translate(modelMatrix_4, vec3(200.f, 50.f, 0.f));
-
-        mat4 projectionMatrix = ortho(0.f, static_cast<float>(g_windowSize.x), 0.f, static_cast<float>(g_windowSize.y), -100.f, 100.f);
+        glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(g_windowSize.x), 0.f, static_cast<float>(g_windowSize.y), -300.f, 300.f);
 
         pDefaultShaderProgram->setMatrix4("projectionMat", projectionMatrix);
 
+        pSpriteShaderProgram->use();
+        pSpriteShaderProgram->setInt("tex", 0);
+        pSpriteShaderProgram->setMatrix4("projectionMat", projectionMatrix);
+
+        auto lastTime = chrono::high_resolution_clock::now();
+
         while (!glfwWindowShouldClose(pWindow))
         {
+
+            auto currentTime = chrono::high_resolution_clock::now();
+            uint64_t duration = chrono::duration_cast<chrono::nanoseconds>(currentTime - lastTime).count();
+            lastTime = currentTime;
+            pAnimatedSprite->update(duration);
+
             glClear(GL_COLOR_BUFFER_BIT);
 
             pDefaultShaderProgram->use();
@@ -164,13 +213,10 @@ int main(int argc, char** argv)
 
             pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_2);
             glDrawArrays(GL_TRIANGLES, 0, 6);
-            
-            pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_3);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
 
-            pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_4);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            pSprite->render();
 
+            pAnimatedSprite->render();
 
             glfwSwapBuffers(pWindow);
 
@@ -181,4 +227,3 @@ int main(int argc, char** argv)
     glfwTerminate();
     return 0;
 }
-

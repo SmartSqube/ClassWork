@@ -1,5 +1,5 @@
 #include "Texture2D.h"
-
+using namespace std;
 namespace Renderer {
 
     Texture2D::Texture2D(const GLuint width, GLuint height,
@@ -65,5 +65,21 @@ namespace Renderer {
     void Texture2D::bind() const
     {
         glBindTexture(GL_TEXTURE_2D, m_ID);
+    }
+
+    void Texture2D::addSubTexture(string name, const glm::vec2& leftBottomUV, const glm::vec2& rightTopUV)
+    {
+        m_subTextures.emplace(move(name), SubTexture2D(leftBottomUV, rightTopUV));
+    }
+
+    const Texture2D::SubTexture2D& Texture2D::getSubTexture(const string& name) const
+    {
+        auto it = m_subTextures.find(name);
+        if (it != m_subTextures.end())
+        {
+            return it->second;
+        }
+        const static SubTexture2D defaultSubTexture;
+        return defaultSubTexture;
     }
 }
